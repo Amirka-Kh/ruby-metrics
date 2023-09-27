@@ -1,1 +1,6 @@
 *.txt
+.idea/collect_repo.iml
+.idea/inspectionProfiles/Project_Default.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
