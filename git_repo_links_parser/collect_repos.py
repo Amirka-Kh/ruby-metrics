@@ -80,6 +80,6 @@ def safe_results(repository_links, option):
 
 
 if __name__ == '__main__':
-    option = 'from_api' # from search box
+    option = 'from_api'
     repos = start_parsing(option)
     safe_results(repos, option)
