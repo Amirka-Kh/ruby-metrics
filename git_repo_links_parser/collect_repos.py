@@ -4,10 +4,7 @@ import json
 import requests
 
 # Set the search query and pagination parameters
-search_query = 'language:ruby size:>240000 stars:>=10 forks:>=10 pushed:>=10 archived:false is:public'
-base_url = 'https://github.com'
-num_pages = 11
-pattern = r"(.+/.+/)star"
+# language:ruby size:>100000 stars:>=10 forks:>=10 pushed:>=10 archived:false is:public
 
 
 def bad_response(response):
@@ -25,44 +22,17 @@ def bad_response(response):
     return data
 
 
-def start_parsing(option):
-    search_url1 = 'https://github.com/search?q=language%3Aruby+size%3A%3E240000+stars%3A%3E%3D10+forks%3A%3E%3D10+pushed%3A%3E%3D10+archived%3Afalse+is%3Apublic&type=repositories&p={}'
-    search_url2 = 'https://api.github.com/search/repositories?q=stars:%3E10+forks:%3E10+language:ruby+is:public+archived:false+size:%3E240000&per_page=100'
-
-    search_url = search_url1 if option != 'from_api' else search_url2
-    repository_links = []
-
-    if option != 'from_api':
-        for page in range(1, num_pages + 1):
-            # Send an HTTP GET request to the search URL
-            response = requests.get(search_url.format(page))
-
-            data = bad_response(response)
-            if not data:
-                break
-
-            # Access the 'csrf_tokens' part of the data
-            csrf_tokens = data['payload']['csrf_tokens']
-
-            # Add the repository URLs to the list
-            repo_urls = []
-            for key in csrf_tokens:
-                match = re.match(pattern, key)
-                if match:
-                    repo_name = match.group(1)
-                    repo_urls.extend([f"{base_url}{repo_name}"])
-
-            # Add the repository URLs to the list
-            repository_links.extend(repo_urls)
-    else:
-        response = requests.get(search_url)
+def start_parsing(filter_tag):
+    search_url = 'https://api.github.com/search/repositories?q=stars:%3E10+forks:%3E10+language:ruby+is:public+archived:false+size:%3E100000&per_page=100&page={}'
+    temp_dict_with_reps = {}
+    num_pages = 3
+    for page in range(1, num_pages + 1):
+        response = requests.get(search_url.format(page))
         data = bad_response(response)
-        temp_dict_with_reps = {}
         for item in data['items']:
-            temp_dict_with_reps[item['html_url']] = item['size']
-
-        sorted_dict = dict(sorted(temp_dict_with_reps.items(), key=lambda item: item[1], reverse=True))
-        repository_links = list(sorted_dict.keys())
+            temp_dict_with_reps[item['html_url']] = item[filter_tag]
+    sorted_dict = dict(sorted(temp_dict_with_reps.items(), key=lambda item: item[1], reverse=True))
+    repository_links = list(sorted_dict.keys())
     return repository_links
 
 
@@ -80,6 +50,6 @@ def safe_results(repository_links, option):
 
 
 if __name__ == '__main__':
-    option = 'from_api'
+    option = 'stargazers_count'
     repos = start_parsing(option)
     safe_results(repos, option)
